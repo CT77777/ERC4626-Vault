@@ -26,23 +26,14 @@ contract CoolVaultTest is Test {
         // mint some asset tokens to Alice
         vm.prank(alice);
         asset.mint(alice, 1000 ether);
-        console.log(
-            "Alice asset balance before deposit:",
-            asset.balanceOf(alice) / 1 ether
-        );
+        console.log("Alice asset balance before deposit:", asset.balanceOf(alice) / 1 ether);
 
         // Alice deposits 100 asset tokens into the vault
         vm.startPrank(alice);
         asset.approve(address(coolVault), 100 ether);
         coolVault.deposit(100 ether, alice);
-        console.log(
-            "Alice asset balance after deposit:",
-            asset.balanceOf(alice) / 1 ether
-        );
-        console.log(
-            "Alice sFF balance after deposit:",
-            coolVault.balanceOf(alice) / 1 ether
-        );
+        console.log("Alice asset balance after deposit:", asset.balanceOf(alice) / 1 ether);
+        console.log("Alice sFF balance after deposit:", coolVault.balanceOf(alice) / 1 ether);
         vm.stopPrank();
 
         // Assertions
@@ -60,26 +51,14 @@ contract CoolVaultTest is Test {
         asset.approve(address(coolVault), 200 ether);
         coolVault.deposit(200 ether, bob);
 
-        console.log(
-            "Bob asset balance after deposit:",
-            asset.balanceOf(bob) / 1 ether
-        );
-        console.log(
-            "Bob sFF balance after deposit:",
-            coolVault.balanceOf(bob) / 1 ether
-        );
+        console.log("Bob asset balance after deposit:", asset.balanceOf(bob) / 1 ether);
+        console.log("Bob sFF balance after deposit:", coolVault.balanceOf(bob) / 1 ether);
 
         // Bob redeems 50 sFF tokens from the vault
         coolVault.redeem(50 ether, bob, bob);
 
-        console.log(
-            "Bob asset balance after redeem:",
-            asset.balanceOf(bob) / 1 ether
-        );
-        console.log(
-            "Bob sFF balance after redeem:",
-            coolVault.balanceOf(bob) / 1 ether
-        );
+        console.log("Bob asset balance after redeem:", asset.balanceOf(bob) / 1 ether);
+        console.log("Bob sFF balance after redeem:", coolVault.balanceOf(bob) / 1 ether);
         vm.stopPrank();
 
         // Assertions
