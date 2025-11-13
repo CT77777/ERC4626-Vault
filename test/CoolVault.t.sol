@@ -68,4 +68,74 @@ contract CoolVaultTest is Test {
         // test invariant: totalAssets should equal asset balance of the vault
         assertEq(coolVault.totalAssets(), asset.balanceOf(address(coolVault)));
     }
+
+    function test_ConvertToSharesEqualPreviewDeposit() public {
+        // Alice mint some asset tokens
+        vm.prank(alice);
+        asset.mint(alice, 300 ether);
+
+        // Alice deposits 200 asset tokens into the vault
+        vm.startPrank(alice);
+        asset.approve(address(coolVault), 300 ether);
+        coolVault.deposit(300 ether, alice);
+        vm.stopPrank();
+
+        // Assertions
+        assertEq(coolVault.convertToShares(200 ether), coolVault.previewDeposit(200 ether));
+    }
+
+    function test_ConvertToAssetsEqualPreviewRedeem() public {
+        // Bob mint some asset tokens
+        vm.prank(bob);
+        asset.mint(bob, 400 ether);
+
+        // Bob deposits 200 asset tokens into the vault
+        vm.startPrank(bob);
+        asset.approve(address(coolVault), 400 ether);
+        coolVault.deposit(400 ether, bob);
+        vm.stopPrank();
+
+        // Assertions
+        assertEq(coolVault.convertToAssets(100 ether), coolVault.previewRedeem(100 ether));
+    }
+
+    function test_Fuzz(uint256 depositAmount, uint256 redeemAmount) public {
+        // Fuzz test deposit and redeem
+        depositAmount = bound(depositAmount, 0 ether, 99999 ether);
+        redeemAmount = bound(redeemAmount, 0 ether, depositAmount);
+
+        // Alice mint some asset tokens
+        vm.prank(alice);
+        asset.mint(alice, depositAmount + 666 ether);
+
+        // Alice deposits asset tokens into the vault
+        vm.startPrank(alice);
+        uint256 computeShares = coolVault.convertToShares(depositAmount);
+        asset.approve(address(coolVault), depositAmount);
+        coolVault.deposit(depositAmount, alice);
+
+        // Alice redeems some sFF tokens from the vault
+        uint256 assetOut = coolVault.redeem(redeemAmount, alice, alice);
+        vm.stopPrank();
+
+        // Assertions
+        assertEq(assetOut, redeemAmount);
+        assertEq(coolVault.balanceOf(alice), depositAmount - redeemAmount);
+        assertEq(asset.balanceOf(alice), 666 ether + redeemAmount);
+    }
+
+    function test_ConvertToSharesLessEqualPreviewDeposit() public {
+        // Alice mint some asset tokens
+        vm.prank(alice);
+        asset.mint(alice, 300 ether);
+
+        // Alice deposits 200 asset tokens into the vault
+        vm.startPrank(alice);
+        asset.approve(address(coolVault), 300 ether);
+        coolVault.deposit(300 ether, alice);
+        vm.stopPrank();
+
+        // Assertions
+        assertLe(coolVault.convertToShares(200 ether), coolVault.previewDeposit(200 ether));
+    }
 }
