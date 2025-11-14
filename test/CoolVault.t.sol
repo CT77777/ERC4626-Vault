@@ -4,10 +4,13 @@ pragma solidity 0.8.30;
 import {Test, console} from "forge-std/Test.sol";
 import {CoolVault} from "../src/CoolVault.sol";
 import {MacDonald} from "../src/MacDonald.sol";
+import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 contract CoolVaultTest is Test {
     CoolVault public coolVault;
     MacDonald public asset;
+    uint256 public MAX_DEPOSIT = 9999 ether;
+    uint256 public MAX_MINT = 8888 ether;
 
     // produce prank user addresses
     address public alice = address(1);
@@ -15,7 +18,7 @@ contract CoolVaultTest is Test {
 
     function setUp() public {
         asset = new MacDonald();
-        coolVault = new CoolVault(asset, "stakedFrenchFries", "sFF");
+        coolVault = new CoolVault(asset, "stakedFrenchFries", "sFF", MAX_DEPOSIT, MAX_MINT);
     }
 
     function test_Asset() public {
@@ -101,7 +104,7 @@ contract CoolVaultTest is Test {
 
     function test_Fuzz(uint256 depositAmount, uint256 redeemAmount) public {
         // Fuzz test deposit and redeem
-        depositAmount = bound(depositAmount, 0 ether, 99999 ether);
+        depositAmount = bound(depositAmount, 0 ether, MAX_DEPOSIT);
         redeemAmount = bound(redeemAmount, 0 ether, depositAmount);
 
         // Alice mint some asset tokens
@@ -137,5 +140,32 @@ contract CoolVaultTest is Test {
 
         // Assertions
         assertLe(coolVault.convertToShares(200 ether), coolVault.previewDeposit(200 ether));
+    }
+
+    function test_MaxDepositRevert() public {
+        vm.prank(alice);
+        asset.mint(alice, 20000 ether);
+
+        vm.startPrank(alice);
+        asset.approve(address(coolVault), 20000 ether);
+
+        // test revert when deposit exceeds MAX_DEPOSIT
+        vm.expectRevert(
+            abi.encodeWithSelector(ERC4626.ERC4626ExceededMaxDeposit.selector, alice, 20000 ether, 9999 ether)
+        );
+        coolVault.deposit(20000 ether, alice);
+        vm.stopPrank();
+    }
+
+    function test_MaxDeposit() public {
+        assertGe(coolVault.maxDeposit(address(alice)), 0);
+        assertGe(coolVault.maxDeposit(address(bob)), 0);
+    }
+
+    function test_MaxDepositAlter() public {
+        assertEq(coolVault.maxDeposit(alice), MAX_DEPOSIT);
+
+        coolVault.alterMaxDeposit(5000 ether);
+        assertEq(coolVault.maxDeposit(alice), 5000 ether);
     }
 }
