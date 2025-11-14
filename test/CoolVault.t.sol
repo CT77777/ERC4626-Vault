@@ -4,9 +4,7 @@ pragma solidity 0.8.30;
 import {Test, console} from "forge-std/Test.sol";
 import {CoolVault} from "../src/CoolVault.sol";
 import {MacDonald} from "../src/MacDonald.sol";
-import {
-    ERC4626
-} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 
 contract CoolVaultTest is Test {
     CoolVault public coolVault;
@@ -20,13 +18,7 @@ contract CoolVaultTest is Test {
 
     function setUp() public {
         asset = new MacDonald();
-        coolVault = new CoolVault(
-            asset,
-            "stakedFrenchFries",
-            "sFF",
-            MAX_DEPOSIT,
-            MAX_MINT
-        );
+        coolVault = new CoolVault(asset, "stakedFrenchFries", "sFF", MAX_DEPOSIT, MAX_MINT);
     }
 
     function test_Asset() public {
@@ -37,23 +29,14 @@ contract CoolVaultTest is Test {
         // mint some asset tokens to Alice
         vm.prank(alice);
         asset.mint(alice, 1000 ether);
-        console.log(
-            "Alice asset balance before deposit:",
-            asset.balanceOf(alice) / 1 ether
-        );
+        console.log("Alice asset balance before deposit:", asset.balanceOf(alice) / 1 ether);
 
         // Alice deposits 100 asset tokens into the vault
         vm.startPrank(alice);
         asset.approve(address(coolVault), 100 ether);
         coolVault.deposit(100 ether, alice);
-        console.log(
-            "Alice asset balance after deposit:",
-            asset.balanceOf(alice) / 1 ether
-        );
-        console.log(
-            "Alice sFF balance after deposit:",
-            coolVault.balanceOf(alice) / 1 ether
-        );
+        console.log("Alice asset balance after deposit:", asset.balanceOf(alice) / 1 ether);
+        console.log("Alice sFF balance after deposit:", coolVault.balanceOf(alice) / 1 ether);
         vm.stopPrank();
 
         // Assertions
@@ -71,26 +54,14 @@ contract CoolVaultTest is Test {
         asset.approve(address(coolVault), 200 ether);
         coolVault.deposit(200 ether, bob);
 
-        console.log(
-            "Bob asset balance after deposit:",
-            asset.balanceOf(bob) / 1 ether
-        );
-        console.log(
-            "Bob sFF balance after deposit:",
-            coolVault.balanceOf(bob) / 1 ether
-        );
+        console.log("Bob asset balance after deposit:", asset.balanceOf(bob) / 1 ether);
+        console.log("Bob sFF balance after deposit:", coolVault.balanceOf(bob) / 1 ether);
 
         // Bob redeems 50 sFF tokens from the vault
         coolVault.redeem(50 ether, bob, bob);
 
-        console.log(
-            "Bob asset balance after redeem:",
-            asset.balanceOf(bob) / 1 ether
-        );
-        console.log(
-            "Bob sFF balance after redeem:",
-            coolVault.balanceOf(bob) / 1 ether
-        );
+        console.log("Bob asset balance after redeem:", asset.balanceOf(bob) / 1 ether);
+        console.log("Bob sFF balance after redeem:", coolVault.balanceOf(bob) / 1 ether);
         vm.stopPrank();
 
         // Assertions
@@ -113,10 +84,7 @@ contract CoolVaultTest is Test {
         vm.stopPrank();
 
         // Assertions
-        assertEq(
-            coolVault.convertToShares(200 ether),
-            coolVault.previewDeposit(200 ether)
-        );
+        assertEq(coolVault.convertToShares(200 ether), coolVault.previewDeposit(200 ether));
     }
 
     function test_ConvertToAssetsEqualPreviewRedeem() public {
@@ -131,10 +99,7 @@ contract CoolVaultTest is Test {
         vm.stopPrank();
 
         // Assertions
-        assertEq(
-            coolVault.convertToAssets(100 ether),
-            coolVault.previewRedeem(100 ether)
-        );
+        assertEq(coolVault.convertToAssets(100 ether), coolVault.previewRedeem(100 ether));
     }
 
     function test_Fuzz(uint256 depositAmount, uint256 redeemAmount) public {
@@ -174,10 +139,7 @@ contract CoolVaultTest is Test {
         vm.stopPrank();
 
         // Assertions
-        assertLe(
-            coolVault.convertToShares(200 ether),
-            coolVault.previewDeposit(200 ether)
-        );
+        assertLe(coolVault.convertToShares(200 ether), coolVault.previewDeposit(200 ether));
     }
 
     function test_MaxDepositRevert() public {
@@ -189,12 +151,7 @@ contract CoolVaultTest is Test {
 
         // test revert when deposit exceeds MAX_DEPOSIT
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC4626.ERC4626ExceededMaxDeposit.selector,
-                alice,
-                20000 ether,
-                9999 ether
-            )
+            abi.encodeWithSelector(ERC4626.ERC4626ExceededMaxDeposit.selector, alice, 20000 ether, 9999 ether)
         );
         coolVault.deposit(20000 ether, alice);
         vm.stopPrank();
